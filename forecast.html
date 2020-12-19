@@ -1,0 +1,390 @@
+﻿<html>
+<head>
+    <title>Прогнозирование обстановки при авариях, связанных с выбросом АХОВ</title>
+</head>
+<body>
+    <script type="text/javascript" src="substances.js"></script>
+    <script type="text/javascript" src="forecast.js"></script>
+    <h3 style="text-align:center; color:cornflowerblue; text-decoration:underline">Прогнозирование обстановки при авариях, связанных с выбросом АХОВ</h3>
+    <form style="width: auto">
+        <h3 style="color:cornflowerblue">Исходные данные</h3>
+        <table>
+            <tr>
+                <td style="text-align: left;">Вещество:</td>
+                <td><select id="cbSubstance" style="width:160px" onchange="Calc()" /></td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Состояние:</td>
+                <td>
+                    <select id="cbAgregate" style="width:160px" onchange="Calc()">
+                        <option value="0">сжиженный газ</option>
+                        <option value="1">сжатый газ</option>
+                        <option value="2">жидкость</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Количество выброшенного (разлившегося) при аварии АХОВ, т:</td>
+                <td><input id="edtQ0" type="text" style="width: 160px" onchange="Calc()" /></td>
+            </tr>
+            <tr id="trLiquidArea">
+                <td style="text-align: left">Характер разлива:</td>
+                <td>
+                    <select id="cbLiquidArea" style="width:160px" onchange="Calc()">
+                        <option value="0">свободно</option>
+                        <option value="1">в поддон/обваловку</option>
+                    </select>
+                </td>
+            </tr>
+            <tr id="trLiquidSquare">
+                <td style="text-align: left;">Площадь разлива в поддон (обваловку), м²:</td>
+                <td><input id="edtLiquidSquare" type="text" style="width: 160px" onchange="Calc()" /></td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Время, прошедшее после аварии, ч:</td>
+                <td><input id="edtAfterTime" type="text" style="width: 160px" onchange="Calc()" /></td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Расстояние до объекта экономики, км:</td>
+                <td><input id="edtDist" type="text" style="width: 160px" onchange="Calc()" /></td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Время суток:</td>
+                <td>
+                    <select id="cbTimeOfDay" style="width:160px" onchange="Calc()">
+                        <option>ночь</option>
+                        <option>утро</option>
+                        <option>день</option>
+                        <option>вечер</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Температура воздуха, °С:</td>
+                <td><input id="edtTemp" type="text" style="width: 160px" onchange="Calc()" /></td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Скорость ветра, м/с:</td>
+                <td><input id="edtWind" type="text" style="width: 160px" onchange="Calc()" /></td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Облачность:</td>
+                <td>
+                    <select id="cbClouds" style="width:160px" onchange="Calc()">
+                        <option>ясно/переменная</option>
+                        <option>сплошная</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Снежный покров:</td>
+                <td><input id="chbSnow" type="checkbox" onchange="Calc()" /></td>
+            </tr>
+            <tr>
+                <td style="text-align: left; font-style: italic;">Состояние атмосферы:</td>
+                <td style="font-style: italic;"><label id="lblAtm"></label></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <button type="button" style="width:100%" onclick="Calc()">Рассчитать</button>
+                </td>
+            </tr>
+        </table>
+    </form>
+    <hr />
+
+    <form id="CalcForm" style="width: auto">
+        <h3 style="color:cornflowerblue">Расчет</h3>
+        <table id="tableQ1">
+            <tr><td colspan="2">Эквивалентное количество АХОВ в первичном облаке:</td></tr>
+            <tr>
+                <td style="text-align: center" colspan="2">
+                    Q<span style="font-size: xx-small">Э1</span> =
+                    K<span style="font-size: xx-small">1</span>
+                    · K<span style="font-size: xx-small">3</span>
+                    · K<span style="font-size: xx-small">5</span>
+                    · K<span style="font-size: xx-small">7</span>
+                    · Q<span style="font-size: xx-small">0</span> =
+                    <label id="lblQ1">lblQ1</label> т
+                </td>
+            </tr>
+            <tbody style="font-size: small; font-style: italic;">
+                <tr>
+                    <td style="text-align: left;">K<span style="font-size: xx-small">1</span> - коэффициент, зависящий от условий хранения АХОВ</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblK1">lblK1</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">K<span style="font-size: xx-small">3</span> - коэффициент, равный отношению пороговой токсодозы хлора к пороговой токсодозе другого АХОВ;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblK3">lblK3</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">K<span style="font-size: xx-small">5</span> - коэффициент, учитывающий степень вертикальной устойчивости атмосферы;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblK5">lblK5</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">K<span style="font-size: xx-small">7</span> - коэффициент, учитывающий влияние температуры воздуха;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblK7">lblK7</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">Q<span style="font-size: xx-small">0</span> - количество выброшенного (разлившегося) при аварии АХОВ, т</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblQ0_1">lblQ0_1</label></td>
+                </tr>
+            </tbody>
+        </table>
+        <p />
+
+        <table id="table_h">
+            <tr><td colspan="2">Толщина слоя АХОВ:</td></tr>
+            <tr>
+                <td style="text-align: center" colspan="2">
+                    h = Q<span style="font-size: xx-small">0</span>/(F·d) =
+                    <label id="lbl_h">lbl_h</label> м
+                </td>
+            </tr>
+            <tbody style="font-size: small; font-style: italic;">
+                <tr>
+                    <td style="text-align: left;">Q<span style="font-size: xx-small">0</span> - количество выброшенного (разлившегося) при аварии АХОВ, т;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblQ0_2">lblQ0_2</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">F - площадь разлива в поддон (обваловку), м²;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblLiquidSquare">lblLiquidSquare</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">d - плотность АХОВ, т/м³</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lbld">lbld</label></td>
+                </tr>
+            </tbody>
+        </table>
+        <p />
+
+        <table id="tableVaporingTime">
+            <tr><td colspan="2">Продолжительность поражающего действия АХОВ (время испарения):</td></tr>
+            <tr>
+                <td style="text-align: center" colspan="2">
+                    T = h · d / (K<span style="font-size: xx-small">2</span>
+                    · K<span style="font-size: xx-small">4</span>
+                    · K<span style="font-size: xx-small">7</span>) =
+                    <label id="lblVaporingTime">lblVaporingTime</label> ч.
+                </td>
+            </tr>
+            <tbody style="font-size: small; font-style: italic;">
+                <tr id="tr_h">
+                    <td style="text-align: left;">h - толщина слоя АХОВ, м;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblh">lblh</label></td>
+                </tr>
+                <tr id="tr_d">
+                    <td style="text-align: left;">d - плотность АХОВ, т/м³</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lbld_2">lbld_2</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">K<span style="font-size: xx-small">2</span> - коэффициент, зависящий от физико-химических свойств АХОВ;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblK2_2">lblK2_2</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">K<span style="font-size: xx-small">4</span> - коэффициент, учитывающий скорость ветра;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblK4_2">lblK4_2</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">K<span style="font-size: xx-small">7</span> - коэффициент, учитывающий влияние температуры воздуха</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblK7_2">lblK7_2</label></td>
+                </tr>
+            </tbody>
+        </table>
+        <p />
+
+        <table id="tableQ2">
+            <tr><td colspan="2">Эквивалентное количество АХОВ во вторичном облаке:</td></tr>
+            <tr>
+                <td style="text-align: center;" colspan="2">
+                    Q<span style="font-size: xx-small">Э2</span> = (1 − K<span style="font-size: xx-small">1</span>)
+                    · K<span style="font-size: xx-small">2</span>
+                    · K<span style="font-size: xx-small">3</span>
+                    · K<span style="font-size: xx-small">4</span>
+                    · K<span style="font-size: xx-small">5</span>
+                    · K<span style="font-size: xx-small">6</span>
+                    · K<span style="font-size: xx-small">7</span>
+                    · Q<span style="font-size: xx-small">0</span>
+                    / (h · d) =
+                    <label id="lblQ2">lblQ2</label> т
+                </td>
+            </tr>
+            <tbody style="font-size: small; font-style: italic;">
+                <tr>
+                    <td style="text-align: left;">K<span style="font-size: xx-small">1</span> - коэффициент, зависящий от условий хранения АХОВ;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblK1_3">lblK1_3</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">K<span style="font-size: xx-small">2</span> - коэффициент, зависящий от физико-химических свойств АХОВ;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblK2_3">lblK2_3</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">K<span style="font-size: xx-small">3</span> - коэффициент, равный отношению пороговой токсодозы хлора к пороговой токсодозе другого АХОВ;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblK3_3">lblK3_3</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">K<span style="font-size: xx-small">4</span> - коэффициент, учитывающий скорость ветра;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblK4_3">lblK4_3</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">K<span style="font-size: xx-small">5</span> - коэффициент, учитывающий степень вертикальной устойчивости атмосферы;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblK5_3">lblK5_3</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">K<span style="font-size: xx-small">6</span> - коэффициент, зависящий от времени, прошедшего после начала аварии;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblK6_3">lblK6_3</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">K<span style="font-size: xx-small">7</span> - коэффициент, учитывающий влияние температуры воздуха;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblK7_3">lblK7_3</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">Q<span style="font-size: xx-small">0</span> - количество выброшенного (разлившегося) при аварии АХОВ, т</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblQ0_3">lblQ0_3</label></td>
+                </tr>
+            </tbody>
+        </table>
+        <p />
+
+        <table>
+            <tr><td colspan="2">Максимальная глубина зоны возможного химического заражения:</td></tr>
+            <tr>
+                <td style="text-align: center;" colspan="2">
+                    Г = Г' + 0.5Г'' =
+                    <label id="lblDepth">lblDepth</label> км
+                </td>
+            </tr>
+            <tbody style="font-size: small; font-style: italic;">
+                <tr>
+                    <td style="text-align: left;">Г' - максимальное из сравниваемых значений Г<span style="font-size: xx-small">1</span> и Г<span style="font-size: xx-small">2</span>, км;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblDepthMax">lblDepthMax</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">Г'' - минимальное из сравниваемых значений Г<span style="font-size: xx-small">1</span> и Г<span style="font-size: xx-small">2</span>, км;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblDepthMin">lblDepthMin</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">Г<span style="font-size: xx-small">1</span> - максимальная глубина зоны возможного химического заражения первичным облаком АХОВ, км;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblDepth1">lblDepth1</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">Г<span style="font-size: xx-small">2</span> - максимальная глубина зоны возможного химического заражения вторичным облаком АХОВ, км</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblDepth2">lblDepth2</label></td>
+                </tr>
+            </tbody>
+        </table>
+        <p />
+
+        <table>
+            <tr><td colspan="2">Предельно возможное значение глубины переноса воздушных масс на Ч + <label id="lblMoment">lblMoment</label>:</td></tr>
+            <tr>
+                <td style="text-align: center;" colspan="2">
+                    Г<span style="font-size: xx-small">п</span> = N · ν =
+                    <label id="lblDepthLim">lblDepthLim</label> км
+                </td>
+            </tr>
+            <tbody style="font-size: small; font-style: italic;">
+                <tr>
+                    <td style="text-align: left;">N - время, прошедшее от начала аварии, ч;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblAfterTime">lblAfterTime</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">ν - скорость переноса переднего фронта зараженного воздуха при заданной скорости ветра и степени вертикальной устойчивости атмосферы, км/ч)</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblNu">lblNu</label></td>
+                </tr>
+            </tbody>
+        </table>
+        <p />
+
+        <table>
+            <tr><td colspan="2">Расчетная глубина зоны возможного химического заражения на Ч + <label id="lblMoment_2">lblMoment_2</label>:</td></tr>
+            <tr>
+                <td style="text-align: center;" colspan="2">
+                    Г = <span style="font-style: italic">min</span>(Г, Г<span style="font-size: xx-small">п</span>) =
+                    <label id="lblDepthRes">lblDepthRes</label> км
+                </td>
+            </tr>
+        </table>
+        <p />
+
+        <table>
+            <tr><td colspan="2">Площадь зоны возможного химического заражения на Ч + <label id="lblMoment_3">lblMoment_3</label>:</td></tr>
+            <tr>
+                <td style="text-align: center;" colspan="2">
+                    S = 8.72·10&#x207B;³ · Г² · φ =
+                    <label id="lblSquare">lblSquare</label> км²
+                </td>
+            </tr>
+            <tbody style="font-size: small; font-style: italic;">
+                <tr>
+                    <td style="text-align: left;">φ - угловые размеры зоны возможного химического заражения, град.</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblAngle">lblAngle</label></td>
+                </tr>
+            </tbody>
+        </table>
+        <p />
+
+        <table id="tableTau">
+            <tr><td colspan="2">Время подхода облака АХОВ к заданному объекту:</td></tr>
+            <tr>
+                <td style="text-align: center;" colspan="2">
+                    τ = x / ν =
+                    <label id="lblTau">lblTau</label> ч.
+                    (<label id="lblTau0000">lblTau0000</label>)
+                </td>
+            </tr>
+            <tbody style="font-size: small; font-style: italic;">
+                <tr>
+                    <td style="text-align: left;">x - расстояние от источника химического заражения до заданного объекта, км;</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblDist">lblDist</label></td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">ν - скорость переноса переднего фронта облака зараженного воздуха, км/ч</td>
+                    <td style="text-align: center; padding-left: 10px;"><label id="lblNuTau">lblNuTau</label></td>
+                </tr>
+            </tbody>
+        </table>
+
+    </form>
+    <hr />
+
+    <form id="ResultForm">
+        <h3 style="color:cornflowerblue">Вывод</h3>
+        <table>
+            <tr>
+                <td style="text-align: left;">Максимальная глубина зоны возможного химического заражения:</td>
+                <td style="text-align: center; padding-left: 10px;"><label id="outDepth">outDepth</label> км</td>
+            </tr>
+            <tr id="trDepthMessage">
+                <td style="text-align: left;">(облако АХОВ не достигает заданного объекта)</td>
+            </tr>
+            <tr id="trOutTau">
+                <td style="text-align: left;">Время подхода облака АХОВ к заданному объекту:</td>
+                <td style="text-align: center; padding-left: 10px;"><label id="outTau0000">outTau0000</label></td>
+            </tr>
+            <tr id="trVaporingTime">
+                <td style="text-align: left;">Продолжительность поражающего действия АХОВ:</td>
+                <td style="text-align: center; padding-left: 10px;"><label id="outVaporingTime">outVaporingTime</label> ч.</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Расчетная глубина зоны возможного химического заражения на Ч + <label id="lblMoment_4">lblMoment_4</label>:</td>
+                <td style="text-align: center; padding-left: 10px;"><label id="outDepthRes">outDepthRes</label> км</td>
+            </tr>
+            <tr>
+                <td style="text-align: left;">Площадь зоны возможного химического заражения на Ч + <label id="lblMoment_5">lblMoment_5</label>:</td>
+                <td style="text-align: center; padding-left: 10px;"><label id="outSquare">outSquare</label> км²</td>
+            </tr>
+        </table>
+        <p id="zoneimg" style="text-align: center" />
+        <p style="text-align: center">
+            <canvas id="myCanvas" width="500" height="300" style="border:1px solid #d3d3d3">
+                Your browser does not support the HTML5 canvas tag.
+            </canvas>
+        </p>
+        <p style="font-size: small; font-style: italic;">
+            * Расчет выполнен по методике, изложенной в своде правил СП 165.1325800.2014 "Инженерно-технические мероприятия по гражданской обороне".
+        </p>
+    </form>
+</body>
+</html>
